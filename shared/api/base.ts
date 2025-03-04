@@ -1,23 +1,8 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
+import { cookieUtils } from "@/shared/utils/cookies";
 
 // API 기본 URL
 const BASE_URL = "https://dummyjson.com";
-
-// 액세스 토큰을 로컬 스토리지에서 가져오는 함수
-const getAccessToken = () => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("accessToken");
-  }
-  return null;
-};
-
-// 리프레시 토큰을 로컬 스토리지에서 가져오는 함수
-const getRefreshToken = () => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("refreshToken");
-  }
-  return null;
-};
 
 // Axios 인스턴스 생성
 const api = axios.create({
@@ -30,7 +15,7 @@ const api = axios.create({
 // 요청 인터셉터 설정
 api.interceptors.request.use(
   (config) => {
-    const token = getAccessToken();
+    const token = cookieUtils.accessToken.get();
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
@@ -51,7 +36,7 @@ api.interceptors.response.use(
       originalRequest &&
       !originalRequest.headers["x-retry"]
     ) {
-      const refreshToken = getRefreshToken();
+      const refreshToken = cookieUtils.refreshToken.get();
 
       if (!refreshToken) {
         // 리프레시 토큰이 없으면 로그인 페이지로 리다이렉트
@@ -70,10 +55,8 @@ api.interceptors.response.use(
         const { accessToken, refreshToken: newRefreshToken } = response.data;
 
         // 새 토큰 저장
-        if (typeof window !== "undefined") {
-          localStorage.setItem("accessToken", accessToken);
-          localStorage.setItem("refreshToken", newRefreshToken);
-        }
+        cookieUtils.accessToken.set(accessToken);
+        cookieUtils.refreshToken.set(newRefreshToken);
 
         // 원래 요청 재시도
         originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
@@ -82,8 +65,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         // 리프레시 토큰도 만료되면 로그인 페이지로 리다이렉트
         if (typeof window !== "undefined") {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
+          cookieUtils.clearAuthCookies();
           window.location.href = "/login";
         }
         return Promise.reject(refreshError);

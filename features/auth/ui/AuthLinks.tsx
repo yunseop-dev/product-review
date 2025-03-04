@@ -3,15 +3,32 @@
 import Link from "next/link";
 import { useAuthStore } from "@/features/auth/model";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function AuthLinks() {
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, logout, isLoading } = useAuthStore();
   const router = useRouter();
+  const [isClientLoaded, setIsClientLoaded] = useState(false);
+
+  useEffect(() => {
+    // This ensures we only show authentication UI after client-side hydration
+    setIsClientLoaded(true);
+  }, []);
 
   const handleLogout = () => {
     logout();
     router.push("/");
   };
+
+  // Don't render anything until client-side rendering is complete and auth is checked
+  if (!isClientLoaded || isLoading) {
+    return (
+      <div className="flex h-10 items-center gap-4">
+        {/* Show skeleton or loading placeholder */}
+        <div className="h-5 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-4">

@@ -32,6 +32,7 @@ export default function LoginForm() {
       await login(data.username, data.password);
       router.push("/");
     } catch (err) {
+      console.error(err);
       setError("로그인에 실패했습니다. 다시 시도해주세요.");
     }
   };

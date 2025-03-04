@@ -3,11 +3,21 @@ import Link from "next/link";
 import { productApi } from "@/entities/product/api";
 import ProductCard from "@/widgets/product-card/ui/ProductCard";
 import AuthLinks from "@/features/auth/ui/AuthLinks";
+import { Pagination } from "@/shared/ui/pagination";
 
 export const revalidate = 3600; // 1시간마다 재검증
 
-export default async function Home() {
-  const data = await productApi.getProducts(12);
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
+  const currentPage = Number(searchParams.page) || 1;
+  const pageSize = 12; // 페이지 당 제품 수
+  const skip = (currentPage - 1) * pageSize;
+
+  const data = await productApi.getProducts(pageSize, skip);
+  const totalPages = Math.ceil(data.total / pageSize);
 
   return (
     <div className="min-h-screen p-8">
@@ -25,6 +35,11 @@ export default async function Home() {
                 <ProductCard key={product.id} product={product} />
               ))}
             </Suspense>
+          </div>
+
+          {/* 페이지네이션 UI */}
+          <div className="mt-12 flex justify-center">
+            <Pagination currentPage={currentPage} totalPages={totalPages} />
           </div>
         </section>
       </main>

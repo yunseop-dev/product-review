@@ -1,11 +1,13 @@
 import { create } from "zustand";
 import { User } from "@/entities/user/model";
 import { authApi } from "./api";
+import { cookieUtils } from "@/shared/utils/cookies";
 
 interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  setLoading: (loading: boolean) => void;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   checkAuth: () => Promise<void>;
@@ -15,6 +17,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isLoading: true,
   isAuthenticated: false,
+
+  setLoading: (loading) => set({ isLoading: loading }),
 
   login: async (username, password) => {
     set({ isLoading: true });
@@ -35,6 +39,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   checkAuth: async () => {
     set({ isLoading: true });
     try {
+      if (!cookieUtils.accessToken.get()) {
+        set({ isAuthenticated: false, isLoading: false });
+        return;
+      }
+
       const user = await authApi.getCurrentUser();
       set({
         user,
