@@ -1,26 +1,19 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { productService } from "@/lib/api/services";
-import ProductCard from "@/components/ProductCard";
+import { productApi } from "@/entities/product/api";
+import ProductCard from "@/widgets/product-card/ui/ProductCard";
+import AuthLinks from "@/features/auth/ui/AuthLinks";
 
 export const revalidate = 3600; // 1시간마다 재검증
 
 export default async function Home() {
-  const data = await productService.getProducts(12);
+  const data = await productApi.getProducts(12);
 
   return (
     <div className="min-h-screen p-8">
       <header className="flex justify-between items-center mb-12">
         <h1 className="text-3xl font-bold">제품 리뷰 사이트</h1>
-        <div className="flex gap-4">
-          <Link
-            href="/login"
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm h-10 px-4"
-          >
-            로그인
-          </Link>
-        </div>
+        <AuthLinks />
       </header>
 
       <main>

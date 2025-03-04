@@ -2,14 +2,15 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { productService } from "@/lib/api/services";
-import ProductReviews from "@/components/ProductReviews";
+import { productApi } from "@/entities/product/api";
+import ProductReviews from "@/widgets/product-reviews/ui/ProductReviews";
+import AuthLinks from "@/features/auth/ui/AuthLinks";
 
 export const revalidate = 3600; // 1시간마다 재검증
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   try {
-    const product = await productService.getProduct(parseInt(params.id));
+    const product = await productApi.getProduct(parseInt(params.id));
     return {
       title: `${product.title} - 제품 리뷰 사이트`,
       description: product.description,
@@ -30,7 +31,7 @@ export default async function ProductPage({
   let product;
 
   try {
-    product = await productService.getProduct(parseInt(params.id));
+    product = await productApi.getProduct(parseInt(params.id));
   } catch (error) {
     notFound();
   }
@@ -39,12 +40,15 @@ export default async function ProductPage({
 
   return (
     <div className="min-h-screen p-8">
-      <Link
-        href="/"
-        className="inline-flex items-center mb-8 text-sm hover:underline"
-      >
-        ← 홈으로 돌아가기
-      </Link>
+      <header className="flex justify-between items-center mb-8">
+        <Link
+          href="/"
+          className="inline-flex items-center text-sm hover:underline"
+        >
+          ← 홈으로 돌아가기
+        </Link>
+        <AuthLinks />
+      </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* 제품 이미지 섹션 */}
