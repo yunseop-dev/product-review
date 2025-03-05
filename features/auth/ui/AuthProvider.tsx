@@ -1,36 +1,65 @@
 "use client";
 
-import { useEffect } from "react";
-import { useAuthStore } from "@/features/auth/model";
+import { useState, ReactNode, useEffect } from "react";
+import { authKeys } from "@/features/auth/model";
 import { cookieUtils } from "@/shared/utils/cookies";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import api from "@/lib/api/axios";
 
-export default function AuthProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const { checkAuth, isLoading, setLoading } = useAuthStore();
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
+export function AuthProvider({ children }: AuthProviderProps) {
+  // QueryClient를 상태로 관리하여 서버 사이드 렌더링 문제 방지
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60 * 1000, // 1분
+            retry: 1,
+            refetchOnWindowFocus: false,
+          },
+        },
+      })
+  );
+
+  // 앱이 시작될 때 인증 상태 초기화
   useEffect(() => {
-    // Quick pre-check - if we have a token in cookie, initialize
-    // auth state to loading=true until the full check completes
-    const hasToken = !!cookieUtils.accessToken.get();
+    // 토큰이 있으면 사용자 정보 프리페치
+    const initializeAuth = async () => {
+      const token = cookieUtils.accessToken.get(null);
 
-    // Always perform full auth check, but this pre-check helps
-    // reduce flashing by ensuring we start with proper loading state
-    const checkAuthentication = async () => {
-      try {
-        await checkAuth();
-      } catch (error) {
-        console.error("Authentication check failed:", error);
-      } finally {
-        // Ensure loading is set to false even if there was an error
-        setLoading(false);
+      if (token) {
+        try {
+          // DummyJSON API에서는 /auth/me가 없으므로
+          // 저장된 userId로 사용자 정보 가져오기
+          const userId = cookieUtils.userId.get(null);
+          if (userId) {
+            const userResponse = await api.get(`/users/${userId}`);
+            queryClient.setQueryData(authKeys.current(), userResponse.data);
+          }
+        } catch (error) {
+          console.error("Auth initialization failed:", error);
+          cookieUtils.clearAuthCookies(null);
+        }
       }
     };
 
-    checkAuthentication();
-  }, [checkAuth, setLoading]);
+    initializeAuth();
+  }, [queryClient]);
 
-  return children;
+  return (
+    <QueryClientProvider client={queryClient}>
+      {/* 기존 컴포넌트 */}
+      {children}
+      {process.env.NODE_ENV !== "production" && (
+        <ReactQueryDevtools initialIsOpen={false} />
+      )}
+    </QueryClientProvider>
+  );
 }
+
+export default AuthProvider;

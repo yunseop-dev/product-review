@@ -1,11 +1,36 @@
+import SiteHeader from "@/widgets/layout/ui/SiteHeader";
+import SiteFooter from "@/widgets/layout/ui/SiteFooter";
+import FeaturedProducts from "@/widgets/featured-products/ui/FeaturedProducts";
+import ProductPagination from "@/widgets/pagination/ui/ProductPagination";
+import { productKeys } from "@/app/productKeys";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
 import { Suspense } from "react";
-import Link from "next/link";
-import { productApi } from "@/entities/product/api";
-import ProductCard from "@/widgets/product-card/ui/ProductCard";
-import AuthLinks from "@/features/auth/ui/AuthLinks";
-import { Pagination } from "@/shared/ui/pagination";
+import api from "@/lib/api/axios";
 
 export const revalidate = 3600; // 1시간마다 재검증
+
+// 서버 컴포넌트에서 초기 데이터 로드
+export async function generateMetadata() {
+  const queryClient = new QueryClient();
+
+  // 초기 데이터 프리페치
+  await queryClient.prefetchQuery({
+    queryKey: ["featured-products"],
+    queryFn: async () => {
+      const response = await api.get("/products?limit=8"); // 추천 제품 8개만 가져옴
+      return response.data;
+    },
+  });
+
+  return {
+    title: "제품 리뷰 사이트",
+    description: "최고의 제품과 리뷰를 찾아보세요",
+  };
+}
 
 export default async function Home({
   searchParams,
@@ -14,57 +39,59 @@ export default async function Home({
 }) {
   const currentPage = Number(searchParams.page) || 1;
   const pageSize = 12; // 페이지 당 제품 수
-  const skip = (currentPage - 1) * pageSize;
 
-  const data = await productApi.getProducts(pageSize, skip);
-  const totalPages = Math.ceil(data.total / pageSize);
+  const queryClient = new QueryClient();
+
+  // 제품 목록 프리페치
+  await queryClient.prefetchQuery({
+    queryKey: productKeys.list({ page: currentPage, limit: pageSize }),
+    queryFn: async () => {
+      const response = await api.get(`/products`, {
+        params: {
+          skip: (currentPage - 1) * pageSize,
+          limit: pageSize,
+        },
+      });
+      return response.data;
+    },
+  });
+
+  // 추천 제품 프리페치
+  await queryClient.prefetchQuery({
+    queryKey: ["featured-products"],
+    queryFn: async () => {
+      const response = await api.get("/products", {
+        params: {
+          limit: 8, // 추천 제품 8개만 가져옴
+        },
+      });
+      return response.data;
+    },
+  });
+
+  // 클라이언트에서 수화할 dehydrated state 생성
+  const dehydratedState = dehydrate(queryClient);
 
   return (
-    <div className="min-h-screen p-8">
-      <header className="flex justify-between items-center mb-12">
-        <h1 className="text-3xl font-bold">제품 리뷰 사이트</h1>
-        <AuthLinks />
-      </header>
+    <HydrationBoundary state={dehydratedState}>
+      <div className="min-h-screen p-8">
+        <SiteHeader />
 
-      <main>
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-6">인기 제품</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <main>
+          <section className="mb-8">
             <Suspense fallback={<div>제품 로딩 중...</div>}>
-              {data.products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+              <FeaturedProducts />
             </Suspense>
-          </div>
 
-          {/* 페이지네이션 UI */}
-          <div className="mt-12 flex justify-center">
-            <Pagination currentPage={currentPage} totalPages={totalPages} />
-          </div>
-        </section>
-      </main>
+            {/* 페이지네이션 UI */}
+            <div className="mt-12 flex justify-center">
+              <ProductPagination currentPage={currentPage} />
+            </div>
+          </section>
+        </main>
 
-      <footer className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-800">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            © {new Date().getFullYear()} 제품 리뷰 사이트. All rights reserved.
-          </p>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <Link
-              href="/about"
-              className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
-            >
-              소개
-            </Link>
-            <Link
-              href="/contact"
-              className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
-            >
-              연락처
-            </Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+        <SiteFooter />
+      </div>
+    </HydrationBoundary>
   );
 }

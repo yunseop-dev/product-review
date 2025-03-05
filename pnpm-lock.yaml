@@ -8,6 +8,12 @@ dependencies:
   '@hookform/resolvers':
     specifier: ^4.1.3
     version: 4.1.3(react-hook-form@7.54.2)
+  '@tanstack/react-query':
+    specifier: ^5.67.1
+    version: 5.67.1(react@19.0.0)
+  '@tanstack/react-query-devtools':
+    specifier: ^5.67.1
+    version: 5.67.1(@tanstack/react-query@5.67.1)(react@19.0.0)
   axios:
     specifier: ^1.8.1
     version: 1.8.1
@@ -626,6 +632,34 @@ packages:
       postcss: 8.5.3
       tailwindcss: 4.0.9
     dev: true
+
+  /@tanstack/query-core@5.67.1:
+    resolution: {integrity: sha512-AkFmuukVejyqVIjEQoFhLb3q+xHl7JG8G9cANWTMe3s8iKzD9j1VBSYXgCjy6vm6xM8cUCR9zP2yqWxY9pTWOA==}
+    dev: false
+
+  /@tanstack/query-devtools@5.65.0:
+    resolution: {integrity: sha512-g5y7zc07U9D3esMdqUfTEVu9kMHoIaVBsD0+M3LPdAdD710RpTcLiNvJY1JkYXqkq9+NV+CQoemVNpQPBXVsJg==}
+    dev: false
+
+  /@tanstack/react-query-devtools@5.67.1(@tanstack/react-query@5.67.1)(react@19.0.0):
+    resolution: {integrity: sha512-a/2I8ORNalh+ek6Nyb9mEiq2u7vydjVMvaQz5ZieGq7r7DxgIFcPiMs4Ay0qkQvHfptESgXR5nImGTHmmt19yQ==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.67.1
+      react: ^18 || ^19
+    dependencies:
+      '@tanstack/query-devtools': 5.65.0
+      '@tanstack/react-query': 5.67.1(react@19.0.0)
+      react: 19.0.0
+    dev: false
+
+  /@tanstack/react-query@5.67.1(react@19.0.0):
+    resolution: {integrity: sha512-fH5u4JLwB6A+wLFdi8wWBWAYoJV5deYif2OveJ26ktAWjU499uvVFS1wPWnyEyq5LvZX1MZInvv9QRaIZANRaQ==}
+    peerDependencies:
+      react: ^18 || ^19
+    dependencies:
+      '@tanstack/query-core': 5.67.1
+      react: 19.0.0
+    dev: false
 
   /@types/estree@1.0.6:
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}

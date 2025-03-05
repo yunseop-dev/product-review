@@ -1,23 +1,8 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
+import { cookieUtils } from "@/shared/utils/cookies";
 
 // API 기본 URL
 const BASE_URL = "https://dummyjson.com";
-
-// 액세스 토큰을 로컬 스토리지에서 가져오는 함수
-const getAccessToken = () => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("accessToken");
-  }
-  return null;
-};
-
-// 리프레시 토큰을 로컬 스토리지에서 가져오는 함수
-const getRefreshToken = () => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("refreshToken");
-  }
-  return null;
-};
 
 // Axios 인스턴스 생성
 const api = axios.create({
@@ -30,7 +15,8 @@ const api = axios.create({
 // 요청 인터셉터 설정
 api.interceptors.request.use(
   (config) => {
-    const token = getAccessToken();
+    // 쿠키에서 토큰 가져오기
+    const token = cookieUtils.accessToken.get(null);
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
@@ -43,50 +29,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config;
+    // DummyJSON은 Token Refresh 기능을 제공하지 않으므로 단순히 오류를 반환
+    if (error.response?.status === 401) {
+      // 인증 토큰 관련 오류 시 쿠키에서 토큰 제거
+      cookieUtils.clearAuthCookies(null);
 
-    // 토큰 만료 오류(401)이고 원래 요청 정보가 있으며 아직 재시도하지 않은 경우
-    if (
-      error.response?.status === 401 &&
-      originalRequest &&
-      !originalRequest.headers["x-retry"]
-    ) {
-      const refreshToken = getRefreshToken();
-
-      if (!refreshToken) {
-        // 리프레시 토큰이 없으면 로그인 페이지로 리다이렉트
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
-        }
-        return Promise.reject(error);
-      }
-
-      try {
-        // 리프레시 토큰으로 새 액세스 토큰 요청
-        const response = await axios.post(`${BASE_URL}/auth/refresh-token`, {
-          refreshToken,
-        });
-
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
-
-        // 새 토큰 저장
-        if (typeof window !== "undefined") {
-          localStorage.setItem("accessToken", accessToken);
-          localStorage.setItem("refreshToken", newRefreshToken);
-        }
-
-        // 원래 요청 재시도
-        originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
-        originalRequest.headers["x-retry"] = "true";
-        return api(originalRequest);
-      } catch (refreshError) {
-        // 리프레시 토큰도 만료되면 로그인 페이지로 리다이렉트
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          window.location.href = "/login";
-        }
-        return Promise.reject(refreshError);
+      // 클라이언트 사이드에서만 리다이렉트 처리
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
       }
     }
 

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/features/auth/model";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuthLogin } from "../hooks";
 
 const loginSchema = z.object({
   username: z.string().min(1, "사용자 이름을 입력해주세요"),
@@ -16,8 +16,9 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const router = useRouter();
-  const login = useAuthStore((state) => state.login);
   const [error, setError] = useState<string | null>(null);
+
+  const login = useAuthLogin();
 
   const {
     register,
@@ -29,10 +30,12 @@ export default function LoginForm() {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      await login(data.username, data.password);
-      router.push("/");
+      await login.mutateAsync({
+        username: data.username,
+        password: data.password,
+      });
     } catch (err) {
-      console.error(err);
+      console.error("Login error:", err);
       setError("로그인에 실패했습니다. 다시 시도해주세요.");
     }
   };
@@ -57,6 +60,7 @@ export default function LoginForm() {
             type="text"
             className="w-full px-3 py-2 border rounded-md"
             {...register("username")}
+            placeholder="사용자 이름"
           />
           {errors.username && (
             <p className="text-red-500 text-xs mt-1">
@@ -74,6 +78,7 @@ export default function LoginForm() {
             type="password"
             className="w-full px-3 py-2 border rounded-md"
             {...register("password")}
+            placeholder="비밀번호"
           />
           {errors.password && (
             <p className="text-red-500 text-xs mt-1">
@@ -84,10 +89,10 @@ export default function LoginForm() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={login.isPending}
           className="w-full py-2 px-4 bg-foreground text-background rounded-md hover:bg-opacity-90 disabled:opacity-50"
         >
-          {isSubmitting ? "로그인 중..." : "로그인"}
+          {login.isPending ? "로그인 중..." : "로그인"}
         </button>
       </form>
 
