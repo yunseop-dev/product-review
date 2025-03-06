@@ -1,9 +1,9 @@
 import { productKeys } from "@/app/productKeys";
 import api from "@/shared/api/base";
-import FeaturedProducts from "@/widgets/featured-products/ui/FeaturedProducts";
 import SiteFooter from "@/widgets/layout/ui/SiteFooter";
 import SiteHeader from "@/widgets/layout/ui/SiteHeader";
 import ProductPagination from "@/widgets/pagination/ui/ProductPagination";
+import Products from "@/widgets/products/ui/Products";
 import {
   dehydrate,
   HydrationBoundary,
@@ -80,7 +80,7 @@ export default async function Home({
         <main>
           <section className="mb-8">
             <Suspense fallback={<div>제품 로딩 중...</div>}>
-              <FeaturedProducts />
+              <Products />
             </Suspense>
 
             {/* 페이지네이션 UI */}
