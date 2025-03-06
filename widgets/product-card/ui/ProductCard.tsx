@@ -17,8 +17,10 @@ export default function ProductCard({ product }: ProductCardProps) {
             src={product.thumbnail}
             alt={product.title}
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             style={{ objectFit: "cover" }}
             className="group-hover:scale-105 transition-transform duration-300"
+            priority
           />
           {product.discountPercentage > 0 && (
             <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">

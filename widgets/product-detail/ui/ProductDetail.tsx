@@ -29,6 +29,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
             src={product.thumbnail}
             alt={product.title}
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 50vw"
             style={{ objectFit: "cover" }}
             priority
             className="rounded-lg"
@@ -45,6 +46,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
                 src={image}
                 alt={`${product.title} image ${index + 1}`}
                 fill
+                sizes="(max-width: 768px) 25vw, 25vw"
                 style={{ objectFit: "cover" }}
                 className="hover:opacity-80 transition-opacity"
               />
