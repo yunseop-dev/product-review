@@ -1,18 +1,16 @@
-import { Suspense } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import ProductReviews from "@/widgets/product-reviews/ui/ProductReviews";
+import { productApi, productKeys } from "@/entities/product/api";
 import AuthLinks from "@/features/auth/ui/AuthLinks";
+import ProductDetail from "@/widgets/product-detail/ui/ProductDetail";
+import { reviewKeys, reviewsApi } from "@/widgets/product-reviews/api/reviews";
+import ProductReviews from "@/widgets/product-reviews/ui/ProductReviews";
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
-import { reviewKeys, reviewsApi } from "@/widgets/product-reviews/api/reviews";
-import { productApi } from "@/entities/product/api";
-import ProductDetail from "@/widgets/product-detail/ui/ProductDetail";
-import { productKeys } from "@/entities/product/api";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 export const revalidate = 3600; // 1시간마다 재검증
 
