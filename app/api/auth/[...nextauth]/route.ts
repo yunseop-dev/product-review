@@ -1,10 +1,10 @@
 import { AuthResponse } from "@/features/auth/api";
 import api from "@/shared/api/base";
-import NextAuth from "next-auth";
+import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 // Auth.js 핸들러 설정
-export const authOptions = {
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -33,7 +33,7 @@ export const authOptions = {
             email: user.email,
             image: user.image,
             // Auth.js 세션에 추가 정보 저장
-            token: user.token,
+            token: user.accessToken,
           };
         } catch (error) {
           console.error("Login error:", error);

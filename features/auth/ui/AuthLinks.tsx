@@ -1,12 +1,13 @@
 "use client";
 
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useAuth } from "../hooks";
 
 export default function AuthLinks() {
   const [isClientLoaded, setIsClientLoaded] = useState(false);
-  const { data: session, status } = useSession();
+  const { user, isLoading } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function AuthLinks() {
   };
 
   // Don't render anything until client-side rendering is complete and auth is checked
-  if (!isClientLoaded || status === "loading") {
+  if (!isClientLoaded || isLoading) {
     return (
       <div className="flex h-10 items-center gap-4">
         {/* Show skeleton or loading placeholder */}
@@ -37,10 +38,10 @@ export default function AuthLinks() {
 
   return (
     <div className="flex items-center gap-4">
-      {session?.user ? (
+      {user ? (
         <>
           <span className="text-sm">
-            환영합니다, {session.user.name || "사용자"}님
+            환영합니다, {user.firstName || "사용자"}님
           </span>
           <button
             onClick={handleLogout}

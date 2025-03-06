@@ -37,7 +37,8 @@ export default async function Home({
 }: {
   searchParams: { page?: string };
 }) {
-  const currentPage = Number(searchParams.page) || 1;
+  const { page } = await searchParams;
+  const currentPage = Number(page) || 1;
   const pageSize = 12; // 페이지 당 제품 수
 
   const queryClient = new QueryClient();

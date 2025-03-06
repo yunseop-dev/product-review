@@ -1,6 +1,6 @@
 import api from "@/shared/api/base";
 import { User } from "@/entities/user/model";
-import { cookieUtils } from "@/shared/utils/cookies";
+import { signIn, signOut } from "next-auth/react";
 
 // 인증 상태를 위한 쿼리 키
 export const authKeys = {
@@ -15,6 +15,8 @@ export interface LoginCredentials {
 }
 
 export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
   id: number;
   username: string;
   email: string;
@@ -22,26 +24,29 @@ export interface AuthResponse {
   lastName: string;
   gender: string;
   image: string;
-  token: string;
 }
 
 export const authApi = {
-  // 로그인
+  // 로그인 - NextAuth를 사용
   login: async (credentials: LoginCredentials) => {
-    const response = await api.post<AuthResponse>("/auth/login", credentials);
+    const result = await signIn("credentials", {
+      username: credentials.username,
+      password: credentials.password,
+      redirect: false,
+    });
 
-    // 토큰을 쿠키에 저장
-    cookieUtils.accessToken.set(response.data.token, null);
+    if (result?.error) {
+      throw new Error(result.error);
+    }
 
-    // DummyJSON는 실제로 리프레시 토큰을 제공하지 않지만, 시뮬레이션을 위해 만든다
-    cookieUtils.refreshToken.set(`refresh_${response.data.token}`, null);
-
-    return response.data;
+    // 현재 사용자 정보 가져오기
+    const userResponse = await api.get<User>("/auth/me");
+    return userResponse.data;
   },
 
-  // 로그아웃
-  logout: () => {
-    cookieUtils.clearAuthCookies(null);
+  // 로그아웃 - NextAuth를 사용
+  logout: async () => {
+    await signOut({ redirect: false });
   },
 
   // 현재 사용자 정보 가져오기

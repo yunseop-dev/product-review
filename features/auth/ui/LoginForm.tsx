@@ -1,12 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
+import { useAuthLogin } from "../hooks";
 const loginSchema = z.object({
   username: z.string().min(1, "사용자 이름을 입력해주세요"),
   password: z.string().min(1, "비밀번호를 입력해주세요"),
@@ -18,8 +16,7 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { mutate: login, isPending, error } = useAuthLogin();
 
   const {
     register,
@@ -30,31 +27,15 @@ export default function LoginForm() {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+    // NextAuth를 통한 로그인
+    login({
+      username: data.username,
+      password: data.password,
+    });
 
-      // NextAuth를 통한 로그인
-      const result = await signIn("credentials", {
-        username: data.username,
-        password: data.password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError("로그인에 실패했습니다. 다시 시도해주세요.");
-        return;
-      }
-
-      // 로그인 성공 시 리디렉션
-      router.push(callbackUrl);
-      router.refresh(); // 세션 정보를 업데이트하기 위해 페이지 새로고침
-    } catch (err) {
-      console.error("Login error:", err);
-      setError("로그인에 실패했습니다. 다시 시도해주세요.");
-    } finally {
-      setIsLoading(false);
-    }
+    // 로그인 성공 시 리디렉션
+    router.push(callbackUrl);
+    router.refresh(); // 세션 정보를 업데이트하기 위해 페이지 새로고침
   };
 
   return (
@@ -63,7 +44,7 @@ export default function LoginForm() {
 
       {error && (
         <div className="p-3 bg-red-100 text-red-700 rounded-md text-sm">
-          {error}
+          {error.message}
         </div>
       )}
 
@@ -106,10 +87,10 @@ export default function LoginForm() {
 
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isPending}
           className="w-full py-2 px-4 bg-foreground text-background rounded-md hover:bg-opacity-90 disabled:opacity-50"
         >
-          {isLoading ? "로그인 중..." : "로그인"}
+          {isPending ? "로그인 중..." : "로그인"}
         </button>
       </form>
 
