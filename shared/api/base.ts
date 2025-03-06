@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
-import { cookieUtils } from "@/shared/utils/cookies";
+import { getSession, signOut } from "next-auth/react";
 
 // API 기본 URL
 const BASE_URL = "https://dummyjson.com";
@@ -14,10 +14,17 @@ const api = axios.create({
 
 // 요청 인터셉터 설정
 api.interceptors.request.use(
-  (config) => {
-    const token = cookieUtils.accessToken.get();
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+  async (config) => {
+    // 클라이언트 사이드에서만 세션 가져오기 시도
+    if (typeof window !== "undefined") {
+      try {
+        const session = await getSession();
+        if (session?.accessToken) {
+          config.headers["Authorization"] = `Bearer ${session.accessToken}`;
+        }
+      } catch (err) {
+        console.error("세션 정보 가져오기 실패:", err);
+      }
     }
     return config;
   },
@@ -34,36 +41,20 @@ api.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       originalRequest &&
-      !originalRequest.headers["x-retry"]
+      !originalRequest.headers["x-retry"] &&
+      typeof window !== "undefined" // 클라이언트 사이드에서만 처리
     ) {
-      const refreshToken = cookieUtils.refreshToken.get(null);
-
-      if (!refreshToken) {
-        return Promise.reject(error);
-      }
-
       try {
-        // 리프레시 토큰으로 새 액세스 토큰 요청
-        const response = await axios.post(`${BASE_URL}/auth/refresh-token`, {
-          refreshToken,
-        });
+        // 세션 만료로 간주하고 로그아웃 처리
+        await signOut({ redirect: false });
 
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        // 로그인 페이지로 리다이렉트
+        window.location.href = `/login?callbackUrl=${encodeURIComponent(
+          window.location.href
+        )}`;
 
-        // 새 토큰 저장
-        cookieUtils.accessToken.set(accessToken, null);
-        cookieUtils.refreshToken.set(newRefreshToken, null);
-
-        // 원래 요청 재시도
-        originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
-        originalRequest.headers["x-retry"] = "true";
-        return api(originalRequest);
+        return Promise.reject(error);
       } catch (refreshError) {
-        // 리프레시 토큰도 만료되면 로그인 페이지로 리다이렉트
-        if (typeof window !== "undefined") {
-          cookieUtils.clearAuthCookies(null);
-          window.location.href = "/login";
-        }
         return Promise.reject(refreshError);
       }
     }

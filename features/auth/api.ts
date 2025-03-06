@@ -47,18 +47,11 @@ export const authApi = {
   // 현재 사용자 정보 가져오기
   getCurrentUser: async () => {
     try {
-      // DummyJSON에서는 /auth/me 같은 엔드포인트가 없어서
-      // 사용자 ID를 추출해 사용자 정보를 가져오는 것으로 대체
       const response = await api.get<User>("/auth/me");
       return response.data;
     } catch (error) {
-      // 로컬 테스트를 위해 임시 사용자 정보 반환
-      try {
-        const response = await api.get<User>("/users/1"); // 임시로 ID 1 사용
-        return response.data;
-      } catch {
-        return null;
-      }
+      console.error("getCurrentUser error:", error);
+      return null;
     }
   },
 };

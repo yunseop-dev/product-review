@@ -18,7 +18,8 @@ export const revalidate = 3600; // 1시간마다 재검증
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   try {
-    const product = await productApi.getProduct(parseInt(params.id));
+    const { id } = await params;
+    const product = await productApi.getProduct(parseInt(id));
     return {
       title: `${product.title} - 제품 리뷰 사이트`,
       description: product.description,
@@ -36,7 +37,8 @@ export default async function ProductPage({
 }: {
   params: { id: string };
 }) {
-  const productId = parseInt(params.id);
+  const { id } = await params;
+  const productId = parseInt(id);
 
   // QueryClient 초기화
   const queryClient = new QueryClient();

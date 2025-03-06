@@ -1,25 +1,32 @@
 "use client";
 
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useAuth, useAuthLogout } from "../hooks";
 
 export default function AuthLinks() {
   const [isClientLoaded, setIsClientLoaded] = useState(false);
-  const { user: currentUser, isLoading: userLoading } = useAuth();
-  const logout = useAuthLogout();
+  const { data: session, status } = useSession();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     // This ensures we only show authentication UI after client-side hydration
     setIsClientLoaded(true);
   }, []);
 
-  const handleLogout = () => {
-    logout.mutate();
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await signOut({ redirect: false });
+      window.location.href = "/"; // 로그아웃 후 홈으로 리디렉션
+    } catch (error) {
+      console.error("Logout error:", error);
+      setIsLoggingOut(false);
+    }
   };
 
   // Don't render anything until client-side rendering is complete and auth is checked
-  if (!isClientLoaded || userLoading) {
+  if (!isClientLoaded || status === "loading") {
     return (
       <div className="flex h-10 items-center gap-4">
         {/* Show skeleton or loading placeholder */}
@@ -30,17 +37,17 @@ export default function AuthLinks() {
 
   return (
     <div className="flex items-center gap-4">
-      {currentUser ? (
+      {session?.user ? (
         <>
           <span className="text-sm">
-            환영합니다, {currentUser.firstName || "사용자"}님
+            환영합니다, {session.user.name || "사용자"}님
           </span>
           <button
             onClick={handleLogout}
             className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm h-10 px-4"
-            disabled={logout.isPending}
+            disabled={isLoggingOut}
           >
-            {logout.isPending ? "로그아웃 중..." : "로그아웃"}
+            {isLoggingOut ? "로그아웃 중..." : "로그아웃"}
           </button>
         </>
       ) : (

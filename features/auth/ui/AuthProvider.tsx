@@ -2,13 +2,15 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { SessionProvider } from "next-auth/react";
 import { ReactNode, useState } from "react";
 
 interface AuthProviderProps {
   children: ReactNode;
+  session?: any;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children, session }: AuthProviderProps) {
   // QueryClient를 상태로 관리하여 서버 사이드 렌더링 문제 방지
   const [queryClient] = useState(
     () =>
@@ -24,13 +26,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {/* 기존 컴포넌트 */}
-      {children}
-      {process.env.NODE_ENV !== "production" && (
-        <ReactQueryDevtools initialIsOpen={false} />
-      )}
-    </QueryClientProvider>
+    <SessionProvider session={session}>
+      <QueryClientProvider client={queryClient}>
+        {/* 기존 컴포넌트 */}
+        {children}
+        {process.env.NODE_ENV !== "production" && (
+          <ReactQueryDevtools initialIsOpen={false} />
+        )}
+      </QueryClientProvider>
+    </SessionProvider>
   );
 }
 

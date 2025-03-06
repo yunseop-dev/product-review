@@ -1,11 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useAuthLogin } from "../hooks";
 
 const loginSchema = z.object({
   username: z.string().min(1, "사용자 이름을 입력해주세요"),
@@ -16,27 +16,44 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const login = useAuthLogin();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      await login.mutateAsync({
+      setIsLoading(true);
+      setError(null);
+
+      // NextAuth를 통한 로그인
+      const result = await signIn("credentials", {
         username: data.username,
         password: data.password,
+        redirect: false,
       });
+
+      if (result?.error) {
+        setError("로그인에 실패했습니다. 다시 시도해주세요.");
+        return;
+      }
+
+      // 로그인 성공 시 리디렉션
+      router.push(callbackUrl);
+      router.refresh(); // 세션 정보를 업데이트하기 위해 페이지 새로고침
     } catch (err) {
       console.error("Login error:", err);
       setError("로그인에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -89,10 +106,10 @@ export default function LoginForm() {
 
         <button
           type="submit"
-          disabled={login.isPending}
+          disabled={isLoading}
           className="w-full py-2 px-4 bg-foreground text-background rounded-md hover:bg-opacity-90 disabled:opacity-50"
         >
-          {login.isPending ? "로그인 중..." : "로그인"}
+          {isLoading ? "로그인 중..." : "로그인"}
         </button>
       </form>
 
