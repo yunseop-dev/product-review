@@ -1,11 +1,8 @@
 "use client";
 
-import { authKeys } from "@/features/auth/model";
-import api from "@/shared/api/base";
-import { cookieUtils } from "@/shared/utils/cookies";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useState } from "react";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -25,26 +22,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         },
       })
   );
-
-  // 앱이 시작될 때 인증 상태 초기화
-  useEffect(() => {
-    // 토큰이 있으면 사용자 정보 프리페치
-    const initializeAuth = async () => {
-      const token = cookieUtils.accessToken.get(null);
-
-      if (token) {
-        try {
-          const userResponse = await api.get("/auth/me");
-          queryClient.setQueryData(authKeys.current(), userResponse.data);
-        } catch (error) {
-          console.error("Auth initialization failed:", error);
-          cookieUtils.clearAuthCookies(null);
-        }
-      }
-    };
-
-    initializeAuth();
-  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>

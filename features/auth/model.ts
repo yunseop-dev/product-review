@@ -1,3 +1,4 @@
+import api from "@/shared/api/base";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // 인증 상태를 위한 쿼리 키
@@ -12,12 +13,8 @@ export function useCurrentUser() {
   return useQuery({
     queryKey: authKeys.current(),
     queryFn: async () => {
-      // API 호출 구현
-      const response = await fetch("/api/auth/me");
-      if (!response.ok) {
-        throw new Error("Failed to fetch user");
-      }
-      return response.json();
+      const response = await api.get("/auth/me");
+      return response.data;
     },
     // 사용자가 로그인하지 않은 경우에도 에러를 발생시키지 않도록 설정
     retry: false,
@@ -31,17 +28,8 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-      });
-
-      if (!response.ok) {
-        throw new Error("Login failed");
-      }
-
-      return response.json();
+      const response = await api.post("/auth/login", credentials);
+      return response.data;
     },
     onSuccess: (data) => {
       // 로그인 성공 후 사용자 정보 캐시 업데이트
@@ -58,15 +46,8 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        throw new Error("Logout failed");
-      }
-
-      return response.json();
+      const response = await api.post("/auth/logout");
+      return response.data;
     },
     onSuccess: () => {
       // 로그아웃 후 사용자 정보 캐시 제거

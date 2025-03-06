@@ -1,14 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useAuth, useAuthLogout } from "../hooks";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuthLogout } from "../hooks";
 import { useCurrentUser } from "../model";
 
 export default function AuthLinks() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
   const [isClientLoaded, setIsClientLoaded] = useState(false);
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
   const logout = useAuthLogout();

@@ -23,16 +23,16 @@ export const authApi = {
     const response = await api.post<AuthResponse>("/auth/login", credentials);
 
     // 토큰을 쿠키에 저장
-    cookieUtils.accessToken.set(response.data.token);
+    cookieUtils.accessToken.set(response.data.token, null);
 
     // DummyJSON는 실제로 리프레시 토큰을 제공하지 않지만, 시뮬레이션을 위해 만든다
-    cookieUtils.refreshToken.set(`refresh_${response.data.token}`);
+    cookieUtils.refreshToken.set(`refresh_${response.data.token}`, null);
 
     return response.data;
   },
 
   logout: () => {
-    cookieUtils.clearAuthCookies();
+    cookieUtils.clearAuthCookies(null);
   },
 
   getCurrentUser: async () => {
