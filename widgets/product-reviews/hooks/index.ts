@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { reviewKeys, reviewsApi } from "../api/reviews";
 import { useState } from "react";
+import { useAuth } from "@/features/auth/hooks";
 
 // 제품 리뷰 가져오기 훅
 export function useProductReviews(productId: string) {
@@ -29,16 +30,22 @@ export function useAddReview() {
 export function useReviewForm(productId: string) {
   const [reviewText, setReviewText] = useState("");
   const addReviewMutation = useAddReview();
-
+  const { user } = useAuth();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!reviewText.trim()) return;
 
+    if (!user) {
+      console.error("User not found");
+      return;
+    }
+
     try {
       await addReviewMutation.mutateAsync({
         productId,
         review: { body: reviewText },
+        userId: user.id.toString(),
       });
 
       // 성공 후 폼 초기화

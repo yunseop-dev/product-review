@@ -23,12 +23,15 @@ export const reviewsApi = {
   addReview: async ({
     productId,
     review,
+    userId,
   }: {
     productId: string;
     review: ReviewFormData;
+    userId: string;
   }) => {
     const response = await api.post(`/comments/add`, {
       postId: parseInt(productId),
+      userId,
       ...review,
     });
     return response.data;

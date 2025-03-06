@@ -2,12 +2,12 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import { ReactNode, useState } from "react";
-
 interface AuthProviderProps {
   children: ReactNode;
-  session?: any;
+  session?: Session;
 }
 
 export function AuthProvider({ children, session }: AuthProviderProps) {
