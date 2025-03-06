@@ -46,29 +46,10 @@ export const cookieUtils = {
       destroyCookie(ctx, "refreshToken", { path: "/" });
     },
   },
-
-  // 사용자 ID 관련 함수 (추가)
-  userId: {
-    get: (ctx: any) => {
-      const cookies = parseCookies(ctx);
-      return cookies.userId || null;
-    },
-    set: (value: string, ctx: any) => {
-      setCookie(ctx, "userId", value, {
-        ...defaultOptions,
-        maxAge: ACCESS_TOKEN_MAX_AGE,
-      });
-    },
-    remove: (ctx: any) => {
-      destroyCookie(ctx, "userId", { path: "/" });
-    },
-  },
-
   // 모든 인증 관련 쿠키 제거
   clearAuthCookies: (ctx: any) => {
     destroyCookie(ctx, "accessToken", { path: "/" });
     destroyCookie(ctx, "refreshToken", { path: "/" });
-    destroyCookie(ctx, "userId", { path: "/" });
   },
 };
 
