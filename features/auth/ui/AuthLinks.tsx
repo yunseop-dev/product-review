@@ -1,19 +1,12 @@
 "use client";
 
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useAuth } from "../hooks";
+import { useState } from "react";
 
 export default function AuthLinks() {
-  const [isClientLoaded, setIsClientLoaded] = useState(false);
-  const { user, isLoading } = useAuth();
+  const { data: session, status } = useSession();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  useEffect(() => {
-    // This ensures we only show authentication UI after client-side hydration
-    setIsClientLoaded(true);
-  }, []);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -27,7 +20,7 @@ export default function AuthLinks() {
   };
 
   // Don't render anything until client-side rendering is complete and auth is checked
-  if (!isClientLoaded || isLoading) {
+  if (status === "loading") {
     return (
       <div className="flex h-10 items-center gap-4">
         {/* Show skeleton or loading placeholder */}
@@ -38,10 +31,10 @@ export default function AuthLinks() {
 
   return (
     <div className="flex items-center gap-4">
-      {user ? (
+      {session?.user ? (
         <>
           <span className="text-sm">
-            환영합니다, {user.firstName || "사용자"}님
+            환영합니다, {session.user.name || "사용자"}님
           </span>
           <button
             onClick={handleLogout}
