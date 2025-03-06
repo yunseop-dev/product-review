@@ -1,4 +1,4 @@
-import { productKeys } from "@/app/productKeys";
+import { productKeys } from "@/entities/product/api";
 import api from "@/shared/api/base";
 import SiteFooter from "@/widgets/layout/ui/SiteFooter";
 import SiteHeader from "@/widgets/layout/ui/SiteHeader";

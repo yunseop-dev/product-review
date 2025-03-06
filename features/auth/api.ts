@@ -2,6 +2,13 @@ import api from "@/shared/api/base";
 import { User } from "@/entities/user/model";
 import { cookieUtils } from "@/shared/utils/cookies";
 
+// 인증 상태를 위한 쿼리 키
+export const authKeys = {
+  all: ["auth"] as const,
+  current: () => [...authKeys.all, "current"] as const,
+  user: (id: string) => [...authKeys.all, "user", id] as const,
+};
+
 export interface LoginCredentials {
   username: string;
   password: string;
@@ -19,6 +26,7 @@ export interface AuthResponse {
 }
 
 export const authApi = {
+  // 로그인
   login: async (credentials: LoginCredentials) => {
     const response = await api.post<AuthResponse>("/auth/login", credentials);
 
@@ -31,19 +39,26 @@ export const authApi = {
     return response.data;
   },
 
+  // 로그아웃
   logout: () => {
     cookieUtils.clearAuthCookies(null);
   },
 
+  // 현재 사용자 정보 가져오기
   getCurrentUser: async () => {
-    // 쿠키에서 토큰 확인을 위한 로직은 API 인터셉터에서 수행되므로 여기서는 생략
     try {
       // DummyJSON에서는 /auth/me 같은 엔드포인트가 없어서
       // 사용자 ID를 추출해 사용자 정보를 가져오는 것으로 대체
-      const response = await api.get<User>("/users/1"); // 임시로 ID 1 사용
+      const response = await api.get<User>("/auth/me");
       return response.data;
     } catch (error) {
-      return null;
+      // 로컬 테스트를 위해 임시 사용자 정보 반환
+      try {
+        const response = await api.get<User>("/users/1"); // 임시로 ID 1 사용
+        return response.data;
+      } catch {
+        return null;
+      }
     }
   },
 };

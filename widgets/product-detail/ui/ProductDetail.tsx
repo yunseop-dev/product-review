@@ -1,8 +1,7 @@
 "use client";
 
+import { productApi, productKeys } from "@/entities/product/api";
 import { useQuery } from "@tanstack/react-query";
-import { productApi } from "@/entities/product/api";
-import { productKeys } from "@/entities/product/api/index";
 import Image from "next/image";
 
 interface ProductDetailProps {

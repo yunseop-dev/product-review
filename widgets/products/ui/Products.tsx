@@ -1,6 +1,6 @@
 "use client";
 
-import { productKeys } from "@/entities/product/api/index";
+import { productKeys } from "@/entities/product/api";
 import { Product } from "@/entities/product/model";
 import api from "@/shared/api/base";
 import ProductCard from "@/widgets/product-card/ui/ProductCard";

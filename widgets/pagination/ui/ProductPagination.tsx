@@ -1,6 +1,6 @@
 "use client";
 
-import { productKeys } from "@/app/productKeys";
+import { productKeys } from "@/entities/product/api";
 import api from "@/shared/api/base";
 import { Pagination } from "@/shared/ui/pagination";
 import { useQuery } from "@tanstack/react-query";

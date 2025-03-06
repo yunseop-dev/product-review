@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useAuthLogout } from "../hooks";
-import { useCurrentUser } from "../model";
+import { useAuth, useAuthLogout } from "../hooks";
 
 export default function AuthLinks() {
   const [isClientLoaded, setIsClientLoaded] = useState(false);
-  const { data: currentUser, isLoading: userLoading } = useCurrentUser();
+  const { user: currentUser, isLoading: userLoading } = useAuth();
   const logout = useAuthLogout();
 
   useEffect(() => {

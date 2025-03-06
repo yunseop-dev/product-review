@@ -12,7 +12,7 @@ import {
 import { reviewKeys, reviewsApi } from "@/widgets/product-reviews/api/reviews";
 import { productApi } from "@/entities/product/api";
 import ProductDetail from "@/widgets/product-detail/ui/ProductDetail";
-import { productKeys } from "@/entities/product/api/index";
+import { productKeys } from "@/entities/product/api";
 
 export const revalidate = 3600; // 1시간마다 재검증
 
