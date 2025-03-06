@@ -1,4 +1,4 @@
-import api from "@/lib/api/axios";
+import api from "@/shared/api/base";
 import { ReviewFormData, ReviewsResponse } from "../model/types";
 
 // 리뷰를 위한 쿼리 키

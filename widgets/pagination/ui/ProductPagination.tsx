@@ -1,9 +1,9 @@
 "use client";
 
-import { Pagination } from "@/shared/ui/pagination";
 import { productKeys } from "@/app/productKeys";
+import api from "@/shared/api/base";
+import { Pagination } from "@/shared/ui/pagination";
 import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/api/axios";
 
 export default function ProductPagination({
   currentPage,

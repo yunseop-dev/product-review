@@ -1,8 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { authKeys } from "./model";
-import { useRouter } from "next/navigation";
-import api from "@/lib/api/axios";
+import api from "@/shared/api/base";
 import { cookieUtils } from "@/shared/utils/cookies";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { authKeys } from "./model";
 
 // 현재 인증 상태 확인 (DummyJSON에 맞게 수정)
 export function useAuth() {
@@ -14,19 +14,8 @@ export function useAuth() {
     queryKey: authKeys.current(),
     queryFn: async () => {
       try {
-        // DummyJSON에는 /auth/me 엔드포인트가 없으므로
-        // 토큰이 있을 경우 캐시된 사용자 정보를 직접 반환
-        const token = cookieUtils.accessToken.get(null);
-        if (!token) return null;
-
-        // userId가 캐싱되어 있다면 사용자 정보 조회
-        const userId = cookieUtils.userId.get(null);
-        if (userId) {
-          const response = await api.get(`/users/${userId}`);
-          return response.data;
-        }
-
-        return null;
+        const response = await api.get("/auth/me");
+        return response.data;
       } catch (error) {
         console.error("Auth check error:", error);
         return null;
@@ -54,13 +43,9 @@ export function useAuthLogin() {
       return response.data;
     },
     onSuccess: (data) => {
+      debugger;
       // 토큰 저장
-      cookieUtils.accessToken.set(data.token, null);
-
-      // 사용자 ID 저장 (사용자 정보 조회 시 필요)
-      if (data.id) {
-        cookieUtils.userId.set(data.id.toString(), null);
-      }
+      cookieUtils.accessToken.set(data.accessToken, null);
 
       // 사용자 정보 캐시 업데이트
       queryClient.setQueryData(authKeys.current(), data);

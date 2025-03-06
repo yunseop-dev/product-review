@@ -1,5 +1,5 @@
-import { Product } from "../model/types";
-import api from "@/lib/api/axios";
+import api from "@/shared/api/base";
+import { Product } from "../model";
 
 // 제품을 위한 쿼리 키
 export const productKeys = {

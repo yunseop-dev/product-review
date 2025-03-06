@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, ReactNode, useEffect } from "react";
 import { authKeys } from "@/features/auth/model";
+import api from "@/shared/api/base";
 import { cookieUtils } from "@/shared/utils/cookies";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import api from "@/lib/api/axios";
+import { ReactNode, useEffect, useState } from "react";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -34,13 +34,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (token) {
         try {
-          // DummyJSON API에서는 /auth/me가 없으므로
-          // 저장된 userId로 사용자 정보 가져오기
-          const userId = cookieUtils.userId.get(null);
-          if (userId) {
-            const userResponse = await api.get(`/users/${userId}`);
-            queryClient.setQueryData(authKeys.current(), userResponse.data);
-          }
+          const userResponse = await api.get("/auth/me");
+          queryClient.setQueryData(authKeys.current(), userResponse.data);
         } catch (error) {
           console.error("Auth initialization failed:", error);
           cookieUtils.clearAuthCookies(null);

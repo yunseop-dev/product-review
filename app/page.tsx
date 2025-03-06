@@ -1,15 +1,15 @@
-import SiteHeader from "@/widgets/layout/ui/SiteHeader";
-import SiteFooter from "@/widgets/layout/ui/SiteFooter";
-import FeaturedProducts from "@/widgets/featured-products/ui/FeaturedProducts";
-import ProductPagination from "@/widgets/pagination/ui/ProductPagination";
 import { productKeys } from "@/app/productKeys";
+import api from "@/shared/api/base";
+import FeaturedProducts from "@/widgets/featured-products/ui/FeaturedProducts";
+import SiteFooter from "@/widgets/layout/ui/SiteFooter";
+import SiteHeader from "@/widgets/layout/ui/SiteHeader";
+import ProductPagination from "@/widgets/pagination/ui/ProductPagination";
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
 import { Suspense } from "react";
-import api from "@/lib/api/axios";
 
 export const revalidate = 3600; // 1시간마다 재검증
 

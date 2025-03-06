@@ -1,8 +1,8 @@
 "use client";
 
+import api from "@/shared/api/base";
 import ProductCard from "@/widgets/product-card/ui/ProductCard";
 import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/api/axios";
 
 // 추천 제품 컴포넌트
 export default function FeaturedProducts() {
