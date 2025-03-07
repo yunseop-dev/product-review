@@ -1,26 +1,19 @@
 import { authApi, authKeys, LoginCredentials } from "./api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-
+import { UseQueryOptions } from "@tanstack/react-query";
+import { User } from "@/entities/user/model";
 // 현재 인증 상태 확인
-export function useAuth() {
-  const {
-    data: user,
-    isLoading,
-    error,
-  } = useQuery({
+export function useAuth(
+  options?: Omit<UseQueryOptions<User | null>, "queryKey" | "queryFn">
+) {
+  return useQuery<User | null>({
     queryKey: authKeys.current(),
     queryFn: authApi.getCurrentUser,
     retry: false,
     refetchOnWindowFocus: false,
+    ...options,
   });
-
-  return {
-    user,
-    isAuthenticated: !!user,
-    isLoading,
-    error,
-  };
 }
 
 // 로그인 처리

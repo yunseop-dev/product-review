@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { reviewKeys, reviewsApi } from "../api/reviews";
 import { useState } from "react";
 import { useAuth } from "@/features/auth/hooks";
+import { useSession } from "next-auth/react";
 
 // 제품 리뷰 가져오기 훅
 export function useProductReviews(productId: string) {
@@ -30,7 +31,10 @@ export function useAddReview() {
 export function useReviewForm(productId: string) {
   const [reviewText, setReviewText] = useState("");
   const addReviewMutation = useAddReview();
-  const { user } = useAuth();
+  const { status } = useSession();
+  const { data: user } = useAuth({
+    enabled: status === "authenticated",
+  });
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
