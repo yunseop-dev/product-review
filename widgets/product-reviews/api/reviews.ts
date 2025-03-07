@@ -15,7 +15,7 @@ export const reviewKeys = {
 export const reviewsApi = {
   // 리뷰 목록 가져오기
   getReviews: async (productId: string): Promise<ReviewsResponse> => {
-    const response = await api.get(`/comments?postId=${productId}&limit=10`);
+    const response = await api.get(`/comments/post/${productId}`);
     return response.data;
   },
 
