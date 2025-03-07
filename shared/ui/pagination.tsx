@@ -1,14 +1,18 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
 
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
+  onPageChange?: (page: number) => void;
 }
 
-export function Pagination({ currentPage, totalPages }: PaginationProps) {
+export function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+}: PaginationProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -45,11 +49,16 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
   };
 
   const navigateToPage = (page: number) => {
-    if (page === 1) {
-      // Remove query parameter for the first page
-      router.push(pathname);
+    if (onPageChange) {
+      onPageChange(page);
     } else {
-      router.push(`${pathname}?page=${page}`);
+      // Default navigation behavior
+      if (page === 1) {
+        // Remove query parameter for the first page
+        router.push(pathname);
+      } else {
+        router.push(`${pathname}?page=${page}`);
+      }
     }
   };
 

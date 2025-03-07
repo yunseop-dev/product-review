@@ -20,15 +20,33 @@ export default function ProductPagination({
   const pageSize = 12; // 페이지 당 제품 수
   const router = useRouter();
 
+  // Update query to include category and search parameters
   const { data: productsData } = useQuery({
-    queryKey: productKeys.list({ page: currentPage, limit: pageSize }),
+    queryKey: productKeys.list({
+      page: currentPage,
+      limit: pageSize,
+      category,
+      search: searchQuery,
+    }),
     queryFn: async () => {
-      const response = await api.get(`/products`, {
-        params: {
-          skip: (currentPage - 1) * pageSize,
-          limit: pageSize,
-        },
-      });
+      // URL params 구성
+      const queryParams: Record<string, string | number> = {
+        skip: (currentPage - 1) * pageSize,
+        limit: pageSize,
+      };
+
+      // 카테고리 필터링이 있는 경우
+      let url = "/products";
+      if (category) {
+        url = `/products/category/${category}`;
+      }
+
+      // 검색어가 있는 경우 검색 파라미터 추가
+      if (searchQuery) {
+        queryParams["q"] = searchQuery;
+      }
+
+      const response = await api.get(url, { params: queryParams });
       return response.data;
     },
     staleTime: 60 * 1000, // 1분
@@ -43,8 +61,7 @@ export default function ProductPagination({
 
   if (totalPages <= 1) return null;
 
-  // Update navigation logic to maintain search and category parameters
-  const navigateToPage = (page: number) => {
+  const handlePageNavigation = (page: number) => {
     const params = new URLSearchParams();
     params.set("page", page.toString());
 
@@ -59,5 +76,11 @@ export default function ProductPagination({
     router.push(`/?${params.toString()}`);
   };
 
-  return <Pagination currentPage={currentPage} totalPages={totalPages} />;
+  return (
+    <Pagination
+      currentPage={currentPage}
+      totalPages={totalPages}
+      onPageChange={handlePageNavigation}
+    />
+  );
 }
