@@ -7,17 +7,29 @@ import ProductCard from "@/widgets/product-card/ui/ProductCard";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 
+// Update the interface
+interface ProductsProps {
+  category?: string;
+  searchQuery?: string;
+}
+
 // 추천 제품 컴포넌트
-export default function Products() {
+export default function Products({ category, searchQuery }: ProductsProps) {
   const searchParams = useSearchParams();
   const page = searchParams.get("page") || "1";
   const pageSize = 12;
   const { data: productsData, isLoading } = useQuery({
-    queryKey: productKeys.list({ page: Number(page), limit: pageSize }),
+    queryKey: productKeys.list({
+      page: Number(page),
+      limit: pageSize,
+      category,
+      search: searchQuery,
+    }),
     queryFn: async () => {
       const response = await api.get("/products", {
         params: {
-          limit: 8, // 추천 제품 8개만 가져옴
+          limit: pageSize,
+          skip: (Number(page) - 1) * pageSize,
         },
       });
       return response.data;

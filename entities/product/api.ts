@@ -6,8 +6,12 @@ import { Comment } from "@/entities/comment/model";
 export const productKeys = {
   all: ["products"] as const,
   lists: () => [...productKeys.all, "list"] as const,
-  list: (filters: { page?: number; limit?: number; skip?: number }) => 
-    [...productKeys.lists(), { ...filters }] as const,
+  list: (filters: {
+    page: number;
+    limit: number;
+    category?: string;
+    search?: string;
+  }) => [...productKeys.lists(), filters] as const,
   details: () => [...productKeys.all, "detail"] as const,
   detail: (id: number) => [...productKeys.details(), id] as const,
 };
@@ -44,7 +48,7 @@ export const productApi = {
     );
     return response.data;
   },
-  
+
   // 추천 제품 가져오기
   getFeaturedProducts: async () => {
     const response = await api.get<ProductsResponse>("/products", {
