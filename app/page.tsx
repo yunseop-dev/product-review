@@ -19,15 +19,6 @@ export const revalidate = 3600; // 1시간마다 재검증
 export async function generateMetadata() {
   const queryClient = new QueryClient();
 
-  // 초기 데이터 프리페치
-  await queryClient.prefetchQuery({
-    queryKey: ["featured-products"],
-    queryFn: async () => {
-      const response = await api.get("/products?limit=8"); // 추천 제품 8개만 가져옴
-      return response.data;
-    },
-  });
-
   // 카테고리 데이터 프리페치 추가
   await queryClient.prefetchQuery({
     queryKey: ["categories"],
