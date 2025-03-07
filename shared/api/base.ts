@@ -19,7 +19,11 @@ api.interceptors.request.use(
     if (typeof window !== "undefined") {
       try {
         const session = await getSession();
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         if (session?.accessToken) {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
           config.headers["Authorization"] = `Bearer ${session.accessToken}`;
         }
       } catch (err) {

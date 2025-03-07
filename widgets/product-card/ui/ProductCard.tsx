@@ -23,7 +23,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             priority
           />
           {product.discountPercentage > 0 && (
-            <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+            <div className="absolute top-2 right-2 bg-red-700 text-white text-xs font-bold px-2 py-1 rounded-full">
               {product.discountPercentage.toFixed(0)}% OFF
             </div>
           )}

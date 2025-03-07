@@ -14,7 +14,11 @@ import { Suspense } from "react";
 
 export const revalidate = 3600; // 1시간마다 재검증
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   try {
     const { id } = await params;
     const product = await productApi.getProduct(parseInt(id));
@@ -23,6 +27,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
       description: product.description,
     };
   } catch (error) {
+    console.error(error);
     return {
       title: "제품 정보 - 제품 리뷰 사이트",
       description: "제품 상세 정보 페이지입니다.",
@@ -33,7 +38,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 export default async function ProductPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
   const productId = parseInt(id);
@@ -54,6 +59,7 @@ export default async function ProductPage({
       queryFn: () => reviewsApi.getReviews(productId.toString()),
     });
   } catch (error) {
+    console.error(error);
     // 제품이 존재하지 않으면 404 페이지로 이동
     notFound();
   }

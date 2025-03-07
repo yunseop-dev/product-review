@@ -32,13 +32,14 @@ export async function generateMetadata() {
   };
 }
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: { page?: string };
-}) {
-  const { page } = await searchParams;
-  const currentPage = Number(page) || 1;
+// PageProps 타입을 명시적으로 정의
+interface PageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function Home({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const currentPage = Number(params.page) || 1;
   const pageSize = 12; // 페이지 당 제품 수
 
   const queryClient = new QueryClient();

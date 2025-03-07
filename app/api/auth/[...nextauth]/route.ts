@@ -4,7 +4,7 @@ import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 // Auth.js 핸들러 설정
-export const authOptions: AuthOptions = {
+const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -44,16 +44,22 @@ export const authOptions: AuthOptions = {
   ],
   callbacks: {
     // JWT 콜백: 토큰에 추가 정보 저장
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         token.accessToken = user.token;
       }
       return token;
     },
     // 세션 콜백: 클라이언트에 노출할 세션 정보 설정
-    async session({ session, token }: any) {
+    async session({ session, token }) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       session.user.id = token.id;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       session.accessToken = token.accessToken;
       return session;
     },
