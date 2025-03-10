@@ -1,3 +1,5 @@
+import api from "@/shared/api/base";
+
 export interface User {
   id: number;
   username: string;
@@ -9,9 +11,6 @@ export interface User {
 }
 
 export const fetchUserDetails = async (userId: number): Promise<User> => {
-  const response = await fetch(`https://dummyjson.com/users/${userId}`);
-  if (!response.ok) {
-    throw new Error("Failed to fetch user data");
-  }
-  return response.json();
+  const response = await api.get(`/users/${userId}`);
+  return response.data;
 };
