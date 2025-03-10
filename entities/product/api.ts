@@ -1,6 +1,6 @@
+import { Comment } from "@/entities/comment/model";
 import api from "@/shared/api/base";
 import { Product, ProductsResponse } from "./model";
-import { Comment } from "@/entities/comment/model";
 
 // 제품을 위한 쿼리 키
 export const productKeys = {
@@ -14,6 +14,8 @@ export const productKeys = {
   }) => [...productKeys.lists(), filters] as const,
   details: () => [...productKeys.all, "detail"] as const,
   detail: (id: number) => [...productKeys.details(), id] as const,
+  search: (query: string, page: number, limit: number) =>
+    [...productKeys.lists(), "search", { query, page, limit }] as const,
 };
 
 export const productApi = {
@@ -41,11 +43,15 @@ export const productApi = {
     return response.data.comments;
   },
 
-  // 제품 검색
-  searchProducts: async (query: string) => {
-    const response = await api.get<ProductsResponse>(
-      `/products/search?q=${query}`
-    );
+  // 제품 검색 (페이지네이션 지원)
+  searchProducts: async (
+    query: string,
+    params?: { skip?: number; limit?: number }
+  ) => {
+    const { skip = 0, limit = 12 } = params || {};
+    const response = await api.get<ProductsResponse>("/products/search", {
+      params: { q: query, skip, limit },
+    });
     return response.data;
   },
 

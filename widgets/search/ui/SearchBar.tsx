@@ -14,20 +14,17 @@ export default function SearchBar({ initialQuery = "" }: SearchBarProps) {
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
 
-    // 기존 URL 파라미터 유지하면서 검색어 추가
-    const params = new URLSearchParams(window.location.search);
-
+    // 검색어가 있으면 /search 페이지로 이동
     if (searchQuery.trim()) {
-      params.set("search", searchQuery.trim());
+      const params = new URLSearchParams();
+      params.set("q", searchQuery.trim());
+
+      // /search 페이지로 이동
+      router.push(`/search?${params.toString()}`);
     } else {
-      params.delete("search");
+      // 검색어가 없으면 홈으로 이동
+      router.push("/");
     }
-
-    // 페이지 리셋 (검색 시 첫 페이지로)
-    params.delete("page");
-
-    // 검색 결과로 이동
-    router.push(`/?${params.toString()}`);
   };
 
   return (

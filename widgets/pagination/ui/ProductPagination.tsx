@@ -1,10 +1,9 @@
 "use client";
 
-import { productKeys } from "@/entities/product/api";
-import api from "@/shared/api/base";
+import { productApi, productKeys } from "@/entities/product/api";
 import { Pagination } from "@/shared/ui/pagination";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 interface ProductPaginationProps {
   currentPage: number;
@@ -19,35 +18,46 @@ export default function ProductPagination({
 }: ProductPaginationProps) {
   const pageSize = 12; // 페이지 당 제품 수
   const router = useRouter();
+  const pathname = usePathname();
+  const isSearchPage = pathname === "/search";
+  const skip = (currentPage - 1) * pageSize;
 
-  // Update query to include category and search parameters
+  // Use different query based on whether we're on the search page
   const { data: productsData } = useQuery({
-    queryKey: productKeys.list({
-      page: currentPage,
-      limit: pageSize,
-      category,
-      search: searchQuery,
-    }),
+    queryKey:
+      isSearchPage && searchQuery
+        ? productKeys.search(searchQuery, currentPage, pageSize)
+        : productKeys.list({
+            page: currentPage,
+            limit: pageSize,
+            category: isSearchPage ? undefined : category,
+            search: searchQuery,
+          }),
     queryFn: async () => {
-      // URL params 구성
-      const queryParams: Record<string, string | number> = {
-        skip: (currentPage - 1) * pageSize,
-        limit: pageSize,
-      };
+      if (isSearchPage && searchQuery) {
+        // 검색 페이지에서는 검색 API 사용
+        return productApi.searchProducts(searchQuery, {
+          skip,
+          limit: pageSize,
+        });
+      } else {
+        // URL params 구성
+        const queryParams: Record<string, string | number> = {
+          skip,
+          limit: pageSize,
+        };
 
-      // 카테고리 필터링이 있는 경우
-      let url = "/products";
-      if (category) {
-        url = `/products/category/${category}`;
+        // 검색어가 있는 경우 검색 파라미터 추가
+        if (searchQuery) {
+          queryParams["q"] = searchQuery;
+        }
+
+        const response = await productApi.getProducts({
+          skip,
+          limit: pageSize,
+        });
+        return response;
       }
-
-      // 검색어가 있는 경우 검색 파라미터 추가
-      if (searchQuery) {
-        queryParams["q"] = searchQuery;
-      }
-
-      const response = await api.get(url, { params: queryParams });
-      return response.data;
     },
     staleTime: 60 * 1000, // 1분
   });
@@ -65,15 +75,22 @@ export default function ProductPagination({
     const params = new URLSearchParams();
     params.set("page", page.toString());
 
-    if (category) {
-      params.set("category", category);
+    if (isSearchPage) {
+      // 검색 페이지인 경우
+      if (searchQuery) {
+        params.set("q", searchQuery);
+      }
+      router.push(`/search?${params.toString()}`);
+    } else {
+      // 홈 페이지인 경우
+      if (category) {
+        params.set("category", category);
+      }
+      if (searchQuery) {
+        params.set("search", searchQuery);
+      }
+      router.push(`/?${params.toString()}`);
     }
-
-    if (searchQuery) {
-      params.set("search", searchQuery);
-    }
-
-    router.push(`/?${params.toString()}`);
   };
 
   return (
