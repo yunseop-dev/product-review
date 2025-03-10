@@ -1,10 +1,12 @@
 "use client";
 
 import { productApi, productKeys } from "@/entities/product/api";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import api from "@/shared/api/base";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface ProductDetailProps {
   productId: number;
@@ -13,6 +15,7 @@ interface ProductDetailProps {
 export default function ProductDetail({ productId }: ProductDetailProps) {
   const router = useRouter();
   const [showCartDialog, setShowCartDialog] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const { data: product, isLoading } = useQuery({
     queryKey: productKeys.detail(productId),
     queryFn: () => productApi.getProduct(productId),
@@ -21,28 +24,23 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   const discountPrice =
     (product?.price ?? 0) * (1 - (product?.discountPercentage ?? 0) / 100);
 
+  const auth = useSession();
+  const isLoggedIn = !!auth.data;
+
   // Cart mutation for adding items to cart
   const addToCartMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch("https://dummyjson.com/carts/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: 1, // Using a default user ID
-          products: [
-            {
-              id: productId,
-              quantity: 1,
-            },
-          ],
-        }),
+      const response = await api.post("/carts/add", {
+        userId: 1, // Using a default user ID
+        products: [
+          {
+            id: productId,
+            quantity: 1,
+          },
+        ],
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to add item to cart");
-      }
-
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
       setShowCartDialog(true);
@@ -54,6 +52,10 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   });
 
   const handleAddToCart = () => {
+    if (!isLoggedIn) {
+      setShowLoginDialog(true);
+      return;
+    }
     addToCartMutation.mutate();
   };
 
@@ -63,6 +65,11 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
 
   const handleCloseDialog = () => {
     setShowCartDialog(false);
+    setShowLoginDialog(false);
+  };
+
+  const handleGoToLogin = () => {
+    router.push("/login");
   };
 
   if (isLoading || !product) {
@@ -250,6 +257,32 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
                 className="flex-1 py-2 px-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium rounded-md hover:bg-opacity-90"
               >
                 쇼핑 계속하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 로그인 필요 다이얼로그 */}
+      {showLoginDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">로그인이 필요합니다</h3>
+            <p className="mb-6">
+              장바구니에 상품을 추가하려면 로그인이 필요합니다.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={handleGoToLogin}
+                className="flex-1 py-2 px-4 bg-foreground text-background font-medium rounded-md hover:bg-opacity-90"
+              >
+                로그인 페이지로 이동
+              </button>
+              <button
+                onClick={handleCloseDialog}
+                className="flex-1 py-2 px-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium rounded-md hover:bg-opacity-90"
+              >
+                닫기
               </button>
             </div>
           </div>
