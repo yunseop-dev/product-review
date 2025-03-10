@@ -95,7 +95,7 @@ export default function LoginForm() {
       </form>
 
       <div className="text-sm text-center mt-4">
-        <p>테스트 계정: kminchelle / 0lelplR</p>
+        <p>테스트 계정: emilys / emilyspass</p>
       </div>
     </div>
   );
