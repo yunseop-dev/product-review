@@ -1,4 +1,4 @@
-import { productApi, productKeys } from "@/entities/product/api";
+import { getProductsQueryOptions } from "@/entities/product/api/queries";
 import SiteFooter from "@/widgets/layout/ui/SiteFooter";
 import SiteHeader from "@/widgets/layout/ui/SiteHeader";
 import ProductPagination from "@/widgets/pagination/ui/ProductPagination";
@@ -40,34 +40,16 @@ interface PageProps {
 export default async function SearchPage({ searchParams }: PageProps) {
   const searchQuery = searchParams.q || "";
   const currentPage = Number(searchParams.page) || 1;
-  const pageSize = 12; // 페이지 당 제품 수
-  const skip = (currentPage - 1) * pageSize;
-
   const queryClient = new QueryClient();
 
-  // 검색 결과 프리페치 - 개선된 검색 API 사용
-  if (searchQuery) {
-    await queryClient.prefetchQuery({
-      queryKey: productKeys.search(searchQuery, currentPage, pageSize),
-      queryFn: async () => {
-        return productApi.searchProducts(searchQuery, {
-          skip,
-          limit: pageSize,
-        });
-      },
-    });
-  } else {
-    // 검색어가 없는 경우 일반 제품 목록 표시
-    await queryClient.prefetchQuery({
-      queryKey: productKeys.list({
-        page: currentPage,
-        limit: pageSize,
-      }),
-      queryFn: async () => {
-        return productApi.getProducts({ skip, limit: pageSize });
-      },
-    });
-  }
+  // 공통 쿼리 옵션 사용하여 프리페치
+  await queryClient.prefetchQuery(
+    getProductsQueryOptions({
+      page: currentPage,
+      searchQuery,
+      isSearchPage: true,
+    })
+  );
 
   // 클라이언트에서 수화할 dehydrated state 생성
   const dehydratedState = dehydrate(queryClient);
