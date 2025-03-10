@@ -1,203 +1,39 @@
 "use client";
 
+import {
+  clearCartMutationOptions,
+  getCartQueryOptions,
+  updateCartMutationOptions,
+} from "@/entities/cart/api/queries";
 import { useAuth } from "@/features/auth/hooks";
-import api from "@/shared/api/base";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import AuthLinks from "@/features/auth/ui/AuthLinks";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import AuthLinks from "@/features/auth/ui/AuthLinks";
-
-interface CartResponse {
-  id: number;
-  products: Product[];
-  total: number;
-  discountedTotal: number;
-  userId: number;
-  totalProducts: number;
-  totalQuantity: number;
-}
-
-interface Product {
-  id: number;
-  title: string;
-  price: number;
-  quantity: number;
-  total: number;
-  discountPercentage: number;
-  discountedTotal: number;
-  thumbnail: string;
-}
 
 export default function CartPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const auth = useAuth();
   const queryClient = useQueryClient();
+  const userId = auth.data?.id;
 
+  // 장바구니 데이터 쿼리
   const {
     data: cartData,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ["cart", auth.data?.id],
-    queryFn: async () => {
-      const response = await api.get<CartResponse>(`/carts/${auth.data?.id}`);
-      return response.data;
-    },
-    enabled: !!auth.data?.id,
-  });
+  } = useQuery(getCartQueryOptions(userId));
 
-  const updateCartMutation = useMutation({
-    mutationFn: async ({
-      productId,
-      quantity,
-    }: {
-      productId: number;
-      quantity: number;
-    }) => {
-      const response = await api.put(`/carts/${auth.data?.id}`, {
-        merge: true,
-        products: [
-          {
-            id: productId,
-            quantity,
-          },
-        ],
-      });
-      return response.data;
-    },
-    onMutate: async ({ productId, quantity }) => {
-      // 이전 쿼리 취소
-      await queryClient.cancelQueries({ queryKey: ["cart", auth.data?.id] });
+  // 장바구니 상품 업데이트 뮤테이션
+  const updateCartMutation = useMutation(
+    updateCartMutationOptions(userId, queryClient)
+  );
 
-      // 이전 데이터 저장
-      const previousCart = queryClient.getQueryData<CartResponse>([
-        "cart",
-        auth.data?.id,
-      ]);
-
-      // 새 데이터로 낙관적 업데이트
-      if (previousCart) {
-        const updatedProducts = previousCart.products
-          .map((product) => {
-            if (product.id === productId) {
-              // 수량이 0이면 상품 제거
-              if (quantity === 0) {
-                return null;
-              }
-
-              // 상품 수량 및 관련 계산 업데이트
-              const newQuantity = quantity;
-              const newTotal = product.price * newQuantity;
-              const newDiscountedTotal =
-                newTotal * (1 - product.discountPercentage / 100);
-
-              return {
-                ...product,
-                quantity: newQuantity,
-                total: newTotal,
-                discountedTotal: newDiscountedTotal,
-              };
-            }
-            return product;
-          })
-          .filter(Boolean) as Product[];
-
-        // 장바구니 총액 계산
-        const newTotal = updatedProducts.reduce(
-          (sum, product) => sum + product.total,
-          0
-        );
-        const newDiscountedTotal = updatedProducts.reduce(
-          (sum, product) => sum + product.discountedTotal,
-          0
-        );
-        const newTotalProducts = updatedProducts.length;
-        const newTotalQuantity = updatedProducts.reduce(
-          (sum, product) => sum + product.quantity,
-          0
-        );
-
-        const optimisticCart: CartResponse = {
-          ...previousCart,
-          products: updatedProducts,
-          total: newTotal,
-          discountedTotal: newDiscountedTotal,
-          totalProducts: newTotalProducts,
-          totalQuantity: newTotalQuantity,
-        };
-
-        queryClient.setQueryData<CartResponse>(
-          ["cart", auth.data?.id],
-          optimisticCart
-        );
-      }
-
-      return { previousCart };
-    },
-    onError: (err, variables, context) => {
-      // 에러 발생 시 이전 데이터로 롤백
-      if (context?.previousCart) {
-        queryClient.setQueryData<CartResponse>(
-          ["cart", auth.data?.id],
-          context.previousCart
-        );
-      }
-    },
-    onSettled: () => {
-      // 작업 완료 후 데이터 다시 불러오기
-      queryClient.invalidateQueries({ queryKey: ["cart", auth.data?.id] });
-    },
-  });
-
-  const deleteCartMutation = useMutation({
-    mutationFn: async () => {
-      const response = await api.delete(`/carts/${auth.data?.id}`);
-      return response.data;
-    },
-    onMutate: async () => {
-      // 이전 쿼리 취소
-      await queryClient.cancelQueries({ queryKey: ["cart", auth.data?.id] });
-
-      // 이전 데이터 저장
-      const previousCart = queryClient.getQueryData<CartResponse>([
-        "cart",
-        auth.data?.id,
-      ]);
-
-      // 빈 장바구니로 낙관적 업데이트
-      if (previousCart) {
-        const emptyCart: CartResponse = {
-          ...previousCart,
-          products: [],
-          total: 0,
-          discountedTotal: 0,
-          totalProducts: 0,
-          totalQuantity: 0,
-        };
-
-        queryClient.setQueryData<CartResponse>(
-          ["cart", auth.data?.id],
-          emptyCart
-        );
-      }
-
-      return { previousCart };
-    },
-    onError: (err, variables, context) => {
-      // 에러 발생 시 이전 데이터로 롤백
-      if (context?.previousCart) {
-        queryClient.setQueryData<CartResponse>(
-          ["cart", auth.data?.id],
-          context.previousCart
-        );
-      }
-    },
-    onSettled: () => {
-      // 작업 완료 후 데이터 다시 불러오기
-      queryClient.invalidateQueries({ queryKey: ["cart", auth.data?.id] });
-    },
-  });
+  // 장바구니 비우기 뮤테이션
+  const deleteCartMutation = useMutation(
+    clearCartMutationOptions(userId, queryClient)
+  );
 
   const deleteProductFromCart = (productId: number) => {
     // 상품 삭제는 수량을 0으로 설정하는 것으로 구현

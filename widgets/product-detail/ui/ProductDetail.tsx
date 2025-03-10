@@ -1,12 +1,14 @@
 "use client";
 
 import { productApi, productKeys } from "@/entities/product/api";
-import api from "@/shared/api/base";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { addToCartMutationOptions } from "@/entities/cart/api/queries";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/features/auth/hooks";
 
 interface ProductDetailProps {
   productId: number;
@@ -14,6 +16,7 @@ interface ProductDetailProps {
 
 export default function ProductDetail({ productId }: ProductDetailProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [showCartDialog, setShowCartDialog] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const { data: product, isLoading } = useQuery({
@@ -26,28 +29,15 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
 
   const auth = useSession();
   const isLoggedIn = !!auth.data;
+  const { data: user } = useAuth({
+    enabled: isLoggedIn,
+  });
 
-  // Cart mutation for adding items to cart
+  // 장바구니 추가 뮤테이션
   const addToCartMutation = useMutation({
-    mutationFn: async () => {
-      const response = await api.post("/carts/add", {
-        userId: 1, // Using a default user ID
-        products: [
-          {
-            id: productId,
-            quantity: 1,
-          },
-        ],
-      });
-
-      return response.data;
-    },
+    ...addToCartMutationOptions(user?.id ?? 0, queryClient),
     onSuccess: () => {
       setShowCartDialog(true);
-    },
-    onError: (error) => {
-      console.error("Error adding to cart:", error);
-      alert("Failed to add item to cart. Please try again.");
     },
   });
 
@@ -56,7 +46,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       setShowLoginDialog(true);
       return;
     }
-    addToCartMutation.mutate();
+    addToCartMutation.mutate({ productId });
   };
 
   const handleGoToCart = () => {
